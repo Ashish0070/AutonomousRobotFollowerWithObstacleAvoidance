@@ -1,0 +1,21 @@
+<launch>
+<!-- run pointcloud_to_laserscan node-->
+<node pkg="pointcloud_to_laserscan" type="pointcloud_to_laserscan_node" name="pointcloud_to_laserscan">
+<remap from="cloud_in" to="/zed/zed_node/point_cloud/cloud_registered"/>
+<remap from="scan" to="/scan"/>
+<rosparam>
+target_frame: base_footprint
+transform_tolerance: 0.01
+min_height: -0.4
+max_height: 1.5
+
+angle_min: -1.5708
+angle_max: 1.5708
+angle_increment: 0.0087
+scan_time: 0.333
+range_min: 0.25
+range_max: 8.0
+concurrency_level: 1
+</rosparam>
+</node>
+</launch>

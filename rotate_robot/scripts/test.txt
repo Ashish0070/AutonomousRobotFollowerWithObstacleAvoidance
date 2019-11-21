@@ -1,0 +1,61 @@
+#!/usr/bin/env python
+import rospy
+import roslib
+from nav_msgs.msg import Odometry
+from tf.transformations import euler_from_quaternion, quaternion_from_euler 
+from geometry_msgs.msg import Twist
+import math
+import sys
+import time
+import cv2
+from std_msgs.msg import String
+from sensor_msgs.msg import Image
+from cv_bridge import CvBridge, CvBridgeError
+import numpy as np
+
+roll = pitch = yaw = 0.0
+target = -45
+kP = 0.5
+m = 0
+l = -45
+bridge = CvBridge()
+global var
+def get_rotation (msg):
+	global roll, pitch, yaw
+	orientation_q = msg.pose.pose.orientation
+	orientation_list = [orientation_q.x, orientation_q.y, orientation_q.z, orientation_q.w]
+	(roll, pitch, yaw) = euler_from_quaternion (orientation_list)
+	#print yaw
+
+def callback(depth_data):
+	depth_image = bridge.imgmsg_to_cv2(depth_data, "32FC1")
+	depth_array = np.array(depth_image, dtype=np.float32)
+	u = depth_data.width/2
+	v = depth_data.height/2
+	var = depth_array[u,v]
+
+rospy.init_node('rotate_robot')
+sub = rospy.Subscriber ('/odom', Odometry, get_rotation)
+pub = rospy.Publisher('/mobile_base/commands/velocity', Twist, queue_size=1)
+r = rospy.Rate(10)
+command = Twist()
+
+while not rospy.is_shutdown():
+	#quat = quaternion_from_euler (roll, pitch,yaw)
+	#print quat
+	target_rad =target*math.pi/180
+	n = (target_rad-yaw)
+	command.angular.z = kP*n
+	pub.publish(command)
+	if (abs(n)<=0.05):
+		rospy.Subscriber("/zed/zed_node/depth/depth_registered", Image, callback)		
+		time.sleep(5)
+		target=target+l
+		m = m+1
+		if (m==4):
+			target=0
+			l=+45
+		if (m==9):
+			target=0
+		if (m==10):
+			sys.exit()
