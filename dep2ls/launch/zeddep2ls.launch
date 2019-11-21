@@ -1,0 +1,13 @@
+<launch>
+<!--Run depth_to_laserscan node-->
+<node pkg="depthimage_to_laserscan" type="depthimage_to_laserscan" name="depthimage_to_laserscan">
+<remap from="image" to="zed/zed_node/depth/depth_registered"/>
+<rosparam>
+output_frame_id: "zed_camera_center"
+scan_height: 10.0
+scan_time: 0.033
+range_min: 0.15
+range_max: 3.0
+</rosparam>
+</node>
+</launch>
